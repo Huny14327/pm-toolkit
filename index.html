@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM Toolkit - Date Calculator</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --border: #d1d5db;
+    }
+    body.dark {
+      --bg: #111827;
+      --card: #1f2937;
+      --text: #f9fafb;
+      --muted: #d1d5db;
+      --accent: #60a5fa;
+      --border: #374151;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 6px; }
+    .note {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 12px;
+      margin-bottom: 5px;
+    }
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 1rem;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    input { background: white; color: #111827; }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-weight: bold;
+      margin-top: 14px;
+      cursor: pointer;
+    }
+    button.secondary { background: #6b7280; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .result {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(37,99,235,0.10);
+      white-space: pre-line;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-weight: normal;
+    }
+    .toggle input { width: auto; }
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 18px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PM Toolkit - Date Calculator</h1>
+    <div class="note">
+      Counting method: the start date is not counted. The next day is Day 1, and the ending date is counted.
+      Example: June 1 to June 30 = 29 days.
+    </div>
+
+    <label class="toggle"><input type="checkbox" id="darkToggle" /> Dark mode</label>
+
+    <div class="card">
+      <h2>Days Between Dates</h2>
+      <label for="startDate">Start date</label>
+      <input type="date" id="startDate" />
+      <label for="endDate">End date</label>
+      <input type="date" id="endDate" />
+      <label class="toggle"><input type="checkbox" id="businessBetween" /> Business days only, Monday-Friday</label>
+      <button onclick="calculateBetween()">Calculate Days</button>
+      <button class="secondary" onclick="copyResult('betweenResult')">Copy Result</button>
+      <div class="result" id="betweenResult">Result will appear here.</div>
+    </div>
+
+    <div class="card">
+      <h2>Add / Subtract Days</h2>
+      <label for="baseDate">Start date</label>
+      <input type="date" id="baseDate" />
+      <label for="numDays">Number of days</label>
+      <input type="number" id="numDays" value="30" />
+      <label class="toggle"><input type="checkbox" id="businessAdd" /> Business days only, Monday-Friday</label>
+      <div class="row">
+        <button onclick="calculateAdd(1)">Add Days</button>
+        <button onclick="calculateAdd(-1)">Subtract Days</button>
+      </div>
+      <button class="secondary" onclick="copyResult('addResult')">Copy Result</button>
+      <div class="result" id="addResult">Result will appear here.</div>
+    </div>
+
+    <div class="footer">Works offline after the page is saved to your phone.</div>
+  </div>
+
+  <script>
+    function toISODate(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+    function parseLocalDate(value) {
+      const parts = value.split("-").map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    function formatDate(d) {
+      return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    }
+    function isBusinessDay(d) {
+      const day = d.getDay();
+      return day !== 0 && day !== 6;
+    }
+    function businessDaysBetween(start, end) {
+      let count = 0;
+      let current = new Date(start);
+      current.setDate(current.getDate() + 1);
+      while (current <= end) {
+        if (isBusinessDay(current)) count++;
+        current.setDate(current.getDate() + 1);
+      }
+      return count;
+    }
+    function addBusinessDays(start, days) {
+      const direction = days >= 0 ? 1 : -1;
+      let remaining = Math.abs(days);
+      let current = new Date(start);
+      while (remaining > 0) {
+        current.setDate(current.getDate() + direction);
+        if (isBusinessDay(current)) remaining--;
+      }
+      return current;
+    }
+    function calculateBetween() {
+      const startValue = document.getElementById("startDate").value;
+      const endValue = document.getElementById("endDate").value;
+      const businessOnly = document.getElementById("businessBetween").checked;
+      if (!startValue || !endValue) {
+        document.getElementById("betweenResult").textContent = "Please enter both dates.";
+        return;
+      }
+      const start = parseLocalDate(startValue);
+      const end = parseLocalDate(endValue);
+      if (end < start) {
+        document.getElementById("betweenResult").textContent = "End date must be after start date.";
+        return;
+      }
+      const millisecondsPerDay = 1000 * 60 * 60 * 24;
+      const calendarDays = Math.round((end - start) / millisecondsPerDay);
+      const result = businessOnly ? businessDaysBetween(start, end) : calendarDays;
+      const label = businessOnly ? "business days" : "calendar days";
+      document.getElementById("betweenResult").textContent =
+        `Start date: ${formatDate(start)}\n` +
+        `End date: ${formatDate(end)}\n\n` +
+        `Result: ${result} ${label}\n\n` +
+        `Counting method: start date is not counted. The next day is Day 1. Ending date is counted.`;
+    }
+    function calculateAdd(direction) {
+      const baseValue = document.getElementById("baseDate").value;
+      const daysValue = document.getElementById("numDays").value;
+      const businessOnly = document.getElementById("businessAdd").checked;
+      if (!baseValue || daysValue === "") {
+        document.getElementById("addResult").textContent = "Please enter a start date and number of days.";
+        return;
+      }
+      const base = parseLocalDate(baseValue);
+      const days = Number(daysValue) * direction;
+      const resultDate = businessOnly ? addBusinessDays(base, days) : new Date(base.getFullYear(), base.getMonth(), base.getDate() + days);
+      const label = businessOnly ? "business days" : "calendar days";
+      const action = days >= 0 ? "Added" : "Subtracted";
+      document.getElementById("addResult").textContent =
+        `Start date: ${formatDate(base)}\n` +
+        `${action}: ${Math.abs(days)} ${label}\n\n` +
+        `Result date: ${formatDate(resultDate)}\n\n` +
+        `Counting method: start date is not counted. The next day is Day 1.`;
+    }
+    function copyResult(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => alert("Result copied.")).catch(() => alert("Copy failed. Press and hold the result to copy it."));
+    }
+    document.getElementById("darkToggle").addEventListener("change", function() {
+      document.body.classList.toggle("dark", this.checked);
+      localStorage.setItem("darkMode", this.checked ? "true" : "false");
+    });
+    function setDefaults() {
+      const today = new Date();
+      const future = new Date();
+      future.setDate(today.getDate() + 30);
+      document.getElementById("startDate").value = toISODate(today);
+      document.getElementById("endDate").value = toISODate(future);
+      document.getElementById("baseDate").value = toISODate(today);
+      if (localStorage.getItem("darkMode") === "true") {
+        document.getElementById("darkToggle").checked = true;
+        document.body.classList.add("dark");
+      }
+    }
+    setDefaults();
+  </script>
+</body>
+</html>
