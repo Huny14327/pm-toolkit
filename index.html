@@ -1,248 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PM Toolkit - Date Calculator</title>
-  <style>
-    :root {
-      --bg: #f4f6f8;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --accent: #2563eb;
-      --border: #d1d5db;
-    }
-    body.dark {
-      --bg: #111827;
-      --card: #1f2937;
-      --text: #f9fafb;
-      --muted: #d1d5db;
-      --accent: #60a5fa;
-      --border: #374151;
-    }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .container {
-      max-width: 650px;
-      margin: 0 auto;
-      padding: 18px;
-    }
-    h1 { font-size: 1.5rem; margin-bottom: 6px; }
-    .note {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-bottom: 18px;
-      line-height: 1.4;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    label {
-      display: block;
-      font-weight: bold;
-      margin-top: 12px;
-      margin-bottom: 5px;
-    }
-    input, button {
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 1rem;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-    input { background: white; color: #111827; }
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      font-weight: bold;
-      margin-top: 14px;
-      cursor: pointer;
-    }
-    button.secondary { background: #6b7280; }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .result {
-      margin-top: 14px;
-      padding: 14px;
-      border-radius: 10px;
-      background: rgba(37,99,235,0.10);
-      white-space: pre-line;
-      line-height: 1.45;
-      font-weight: 500;
-    }
-    .toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      font-weight: normal;
-    }
-    .toggle input { width: auto; }
-    .footer {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin: 18px 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Toolkit - Date Calculator</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px;background:#f4f6f8}
+.tabs{display:flex;gap:8px;margin-bottom:15px}
+.tabbtn{padding:10px 14px;border:none;background:#ddd;border-radius:6px;cursor:pointer}
+.tabbtn.active{background:#2563eb;color:white}
+.tab{display:none;background:white;padding:18px;border-radius:8px}
+.tab.active{display:block}
+label{display:block;margin-top:10px;font-weight:bold}
+input{width:100%;padding:10px;margin-top:4px}
+button.calc{margin-top:15px;padding:10px;width:100%;background:#2563eb;color:white;border:none;border-radius:6px}
+.result{white-space:pre-line;background:#eef3ff;padding:12px;margin-top:15px;border-radius:6px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>PM Toolkit - Date Calculator</h1>
-    <div class="note">
-      Counting method: the start date is not counted. The next day is Day 1, and the ending date is counted.
-      Example: June 1 to June 30 = 29 days.
-    </div>
+<h1>PM Toolkit - Date Calculator</h1>
 
-    <label class="toggle"><input type="checkbox" id="darkToggle" /> Dark mode</label>
+<div class="tabs">
+<button class="tabbtn active" onclick="showTab('days',this)">Days Between</button>
+<button class="tabbtn" onclick="showTab('add',this)">Add/Subtract</button>
+<button class="tabbtn" onclick="showTab('age',this)">Age</button>
+</div>
 
-    <div class="card">
-      <h2>Days Between Dates</h2>
-      <label for="startDate">Start date</label>
-      <input type="date" id="startDate" />
-      <label for="endDate">End date</label>
-      <input type="date" id="endDate" />
-      <label class="toggle"><input type="checkbox" id="businessBetween" /> Business days only, Monday-Friday</label>
-      <button onclick="calculateBetween()">Calculate Days</button>
-      <button class="secondary" onclick="copyResult('betweenResult')">Copy Result</button>
-      <div class="result" id="betweenResult">Result will appear here.</div>
-    </div>
+<div id="days" class="tab active">
+<label>Start Date</label><input type="date" id="s">
+<label>End Date</label><input type="date" id="e">
+<button class="calc" onclick="calcDays()">Calculate</button>
+<div id="r1" class="result"></div>
+</div>
 
-    <div class="card">
-      <h2>Add / Subtract Days</h2>
-      <label for="baseDate">Start date</label>
-      <input type="date" id="baseDate" />
-      <label for="numDays">Number of days</label>
-      <input type="number" id="numDays" value="30" />
-      <label class="toggle"><input type="checkbox" id="businessAdd" /> Business days only, Monday-Friday</label>
-      <div class="row">
-        <button onclick="calculateAdd(1)">Add Days</button>
-        <button onclick="calculateAdd(-1)">Subtract Days</button>
-      </div>
-      <button class="secondary" onclick="copyResult('addResult')">Copy Result</button>
-      <div class="result" id="addResult">Result will appear here.</div>
-    </div>
+<div id="add" class="tab">
+<label>Start Date</label><input type="date" id="d">
+<label>Number of Days</label><input type="number" id="n" value="30">
+<button class="calc" onclick="addDays()">Add Days</button>
+<div id="r2" class="result"></div>
+</div>
 
-    <div class="footer">Works offline after the page is saved to your phone.</div>
-  </div>
+<div id="age" class="tab">
+<label>Birthday</label><input type="date" id="b">
+<label>As Of Date</label><input type="date" id="a">
+<button class="calc" onclick="calcAge()">Calculate Age</button>
+<div id="r3" class="result"></div>
+</div>
 
-  <script>
-    function toISODate(d) {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }
-    function parseLocalDate(value) {
-      const parts = value.split("-").map(Number);
-      return new Date(parts[0], parts[1] - 1, parts[2]);
-    }
-    function formatDate(d) {
-      return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    }
-    function isBusinessDay(d) {
-      const day = d.getDay();
-      return day !== 0 && day !== 6;
-    }
-    function businessDaysBetween(start, end) {
-      let count = 0;
-      let current = new Date(start);
-      current.setDate(current.getDate() + 1);
-      while (current <= end) {
-        if (isBusinessDay(current)) count++;
-        current.setDate(current.getDate() + 1);
-      }
-      return count;
-    }
-    function addBusinessDays(start, days) {
-      const direction = days >= 0 ? 1 : -1;
-      let remaining = Math.abs(days);
-      let current = new Date(start);
-      while (remaining > 0) {
-        current.setDate(current.getDate() + direction);
-        if (isBusinessDay(current)) remaining--;
-      }
-      return current;
-    }
-    function calculateBetween() {
-      const startValue = document.getElementById("startDate").value;
-      const endValue = document.getElementById("endDate").value;
-      const businessOnly = document.getElementById("businessBetween").checked;
-      if (!startValue || !endValue) {
-        document.getElementById("betweenResult").textContent = "Please enter both dates.";
-        return;
-      }
-      const start = parseLocalDate(startValue);
-      const end = parseLocalDate(endValue);
-      if (end < start) {
-        document.getElementById("betweenResult").textContent = "End date must be after start date.";
-        return;
-      }
-      const millisecondsPerDay = 1000 * 60 * 60 * 24;
-      const calendarDays = Math.round((end - start) / millisecondsPerDay);
-      const result = businessOnly ? businessDaysBetween(start, end) : calendarDays;
-      const label = businessOnly ? "business days" : "calendar days";
-      document.getElementById("betweenResult").textContent =
-        `Start date: ${formatDate(start)}\n` +
-        `End date: ${formatDate(end)}\n\n` +
-        `Result: ${result} ${label}\n\n` +
-        `Counting method: start date is not counted. The next day is Day 1. Ending date is counted.`;
-    }
-    function calculateAdd(direction) {
-      const baseValue = document.getElementById("baseDate").value;
-      const daysValue = document.getElementById("numDays").value;
-      const businessOnly = document.getElementById("businessAdd").checked;
-      if (!baseValue || daysValue === "") {
-        document.getElementById("addResult").textContent = "Please enter a start date and number of days.";
-        return;
-      }
-      const base = parseLocalDate(baseValue);
-      const days = Number(daysValue) * direction;
-      const resultDate = businessOnly ? addBusinessDays(base, days) : new Date(base.getFullYear(), base.getMonth(), base.getDate() + days);
-      const label = businessOnly ? "business days" : "calendar days";
-      const action = days >= 0 ? "Added" : "Subtracted";
-      document.getElementById("addResult").textContent =
-        `Start date: ${formatDate(base)}\n` +
-        `${action}: ${Math.abs(days)} ${label}\n\n` +
-        `Result date: ${formatDate(resultDate)}\n\n` +
-        `Counting method: start date is not counted. The next day is Day 1.`;
-    }
-    function copyResult(id) {
-      const text = document.getElementById(id).textContent;
-      navigator.clipboard.writeText(text).then(() => alert("Result copied.")).catch(() => alert("Copy failed. Press and hold the result to copy it."));
-    }
-    document.getElementById("darkToggle").addEventListener("change", function() {
-      document.body.classList.toggle("dark", this.checked);
-      localStorage.setItem("darkMode", this.checked ? "true" : "false");
-    });
-    function setDefaults() {
-      const today = new Date();
-      const future = new Date();
-      future.setDate(today.getDate() + 30);
-      document.getElementById("startDate").value = toISODate(today);
-      document.getElementById("endDate").value = toISODate(future);
-      document.getElementById("baseDate").value = toISODate(today);
-      if (localStorage.getItem("darkMode") === "true") {
-        document.getElementById("darkToggle").checked = true;
-        document.body.classList.add("dark");
-      }
-    }
-    setDefaults();
-  </script>
+<script>
+function showTab(id,btn){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.tabbtn').forEach(t=>t.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+btn.classList.add('active');
+}
+function fmt(d){return d.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
+function p(v){let x=v.split('-').map(Number);return new Date(x[0],x[1]-1,x[2]);}
+const today=new Date();
+document.getElementById('a').value=today.toISOString().slice(0,10);
+
+function calcDays(){
+let s=p(document.getElementById('s').value);
+let e=p(document.getElementById('e').value);
+let diff=Math.round((e-s)/86400000);
+document.getElementById('r1').textContent=`${diff} calendar days`;
+}
+function addDays(){
+let d=p(document.getElementById('d').value);
+let n=parseInt(document.getElementById('n').value);
+d.setDate(d.getDate()+n);
+document.getElementById('r2').textContent=fmt(d);
+}
+function calcAge(){
+let b=p(document.getElementById('b').value);
+let a=p(document.getElementById('a').value);
+let y=a.getFullYear()-b.getFullYear();
+let m=a.getMonth()-b.getMonth();
+let day=a.getDate()-b.getDate();
+if(day<0){m--;let last=new Date(a.getFullYear(),a.getMonth(),0).getDate();day+=last;}
+if(m<0){y--;m+=12;}
+let total=Math.round((a-b)/86400000);
+document.getElementById('r3').textContent=
+`Age: ${y} years, ${m} months, ${day} days
+
+Total days old: ${total.toLocaleString()}`;
+}
+</script>
 </body>
 </html>
